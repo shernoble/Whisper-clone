@@ -3,8 +3,7 @@ const expressLayouts=require("express-ejs-layouts");
 const mongoose=require("mongoose");
 const app=express();
 const bodyParser=require("body-parser");
-const encrypt=require("mongoose-encryption");
-
+const md5=require("md5");
 
 
 app.set('view engine','ejs');

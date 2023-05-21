@@ -1,5 +1,6 @@
 require("../models/database");
 const User=require("../models/User");
+const md5=require("md5");
 
 exports.homepage=async(req,res)=>{
     try{
@@ -20,7 +21,7 @@ exports.login=async(req,res)=>{
 exports.loginPost=async(req,res)=>{
     try{
         const e=req.body.email;
-        const pass=req.body.password;
+        const pass=md5(req.body.password);
         const user_log=await User.findOne({email:e});
         // decrypt pass
         if(user_log){
@@ -48,7 +49,8 @@ exports.registerPost=async(req,res)=>{
     try{
         const newUser=new User({
             email:req.body.email,
-            password:req.body.password
+            // hash password using md5 js hashfunction
+            password:md5(req.body.password)
         });
         // console.log(newUser);
         newUser.save()
