@@ -1,6 +1,8 @@
 require("../models/database");
 const User=require("../models/User");
-const md5=require("md5");
+// const md5=require("md5");
+const bcrypt=require("bcrypt");
+const saltRounds=10;
 
 exports.homepage=async(req,res)=>{
     try{
@@ -21,15 +23,16 @@ exports.login=async(req,res)=>{
 exports.loginPost=async(req,res)=>{
     try{
         const e=req.body.email;
-        const pass=md5(req.body.password);
+        const pass=req.body.password;
         const user_log=await User.findOne({email:e});
         // decrypt pass
         if(user_log){
-            if(user_log.password==pass){
-                res.render("secrets");
-                
-            }
-            else console.log("incorrect password");
+            bcrypt.compare(pass, user_log.password, function(err, result) {
+                // result == true
+                if(result == true) res.render("secrets");
+                else console.log("incorrect password");
+            });
+            
         }
     }
     catch(err){
@@ -46,11 +49,11 @@ exports.register=async(req,res)=>{
     }
 }
 exports.registerPost=async(req,res)=>{
-    try{
+    bcrypt.hash(req.body.password,saltRounds,function(err, hash){
         const newUser=new User({
             email:req.body.email,
             // hash password using md5 js hashfunction
-            password:md5(req.body.password)
+            password:hash
         });
         // console.log(newUser);
         newUser.save()
@@ -62,10 +65,6 @@ exports.registerPost=async(req,res)=>{
         .catch(function(err){
             console.log(err);
         })
-        
-        
-    }
-    catch(err){
-        res.status(500).send({message:err.message || "Error Occured"});
-    }
+    });
+    
 }
