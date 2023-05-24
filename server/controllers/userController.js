@@ -1,8 +1,10 @@
 require("../models/database");
 const User=require("../models/User");
-// const md5=require("md5");
-const bcrypt=require("bcrypt");
-const saltRounds=10;
+// const session=require("express-session");
+const passport=require("passport");
+// const connectEnsureLogin = require('connect-ensure-login');
+// passport-local will be used by passport-local-mongoose but we dont need to explicitly require it
+
 
 exports.homepage=async(req,res)=>{
     try{
@@ -21,23 +23,18 @@ exports.login=async(req,res)=>{
     }
 }
 exports.loginPost=async(req,res)=>{
-    try{
-        const e=req.body.email;
-        const pass=req.body.password;
-        const user_log=await User.findOne({email:e});
-        // decrypt pass
-        if(user_log){
-            bcrypt.compare(pass, user_log.password, function(err, result) {
-                // result == true
-                if(result == true) res.render("secrets");
-                else console.log("incorrect password");
-            });
-            
+    const user_login=new User({
+        email:req.body.email,
+        password:req.body.password
+    });
+    req.login(user_login,function(err){
+        if(err) console.log(err);
+        else{
+            passport.authenticate("local")(req,res,function(){
+                res.redirect("/secrets");
+            }); 
         }
-    }
-    catch(err){
-        res.status(500).send({message:err.message || "Error Occured"});
-    }
+    });
 }
 exports.register=async(req,res)=>{
     try{
@@ -49,22 +46,38 @@ exports.register=async(req,res)=>{
     }
 }
 exports.registerPost=async(req,res)=>{
-    bcrypt.hash(req.body.password,saltRounds,function(err, hash){
-        const newUser=new User({
-            email:req.body.email,
-            // hash password using md5 js hashfunction
-            password:hash
-        });
-        // console.log(newUser);
-        newUser.save()
-        // encrypt pass
-        .then(function(){
-            console.log("successss");
-            res.render("secrets");
-        })
-        .catch(function(err){
+    console.log(req.body.password);
+    User.register({email:req.body.email},req.body.password,function(err,user){
+        if(err){
             console.log(err);
-        })
+            res.redirect("/register");
+        }
+        else{
+            // authenticate "local"ly
+            // callback is triggered onlywhen auth is successful, cookies are created, sessions are cerated
+            passport.authenticate("local")(req,res,function(){
+                console.log(req.isAuthenticated());
+                res.redirect("/secrets");
+            }); 
+        }
     });
     
+}
+exports.checkAuth=async(req,res)=>{
+    // connectEnsureLogin.ensureLoggedIn();
+    // console.log(req.isAuthenticated());
+    if(req.isAuthenticated()){
+        console.log("auth");
+        res.render("secrets");
+    }
+    else{
+        console.log("no auth");
+        res.redirect("/login");
+    }
+}
+exports.logoutUser=async(req,res)=>{
+    req.logout(function(err) {
+        if (err) { return next(err); }
+        res.redirect('/');
+    });
 }
