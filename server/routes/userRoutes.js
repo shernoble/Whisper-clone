@@ -10,7 +10,7 @@ router.get("/login",userController.login);
 router.post("/login",userController.loginPost);
 router.get("/register",userController.register);
 router.post("/register",userController.registerPost);
-router.get("/secrets",userController.checkAuth);
+router.get("/secrets",userController.secrets);
 router.get("/logout",userController.logoutUser);
 // router.get("/auth",userController.auth);
 

@@ -5,8 +5,9 @@ const app=express();
 const bodyParser=require("body-parser");
 // const md5=require("md5");
 const session=require("express-session");
+// PASSPORT
 const passport=require("passport");
-// const passportLocalMongoose=require("passport-local-mongoose");
+const passportLocalMongoose=require("passport-local-mongoose");
 const LocalStrategy=require("passport-local").Strategy;
 const User=require("./server/models/User");
 
@@ -14,10 +15,11 @@ app.set('view engine','ejs');
 
 // middleware
 app.use(express.static('public'));
+// PASSPORT
 app.use(session({
     secret: 'Our lil secret.',
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: false
     // cookie: { secure: true }
 }));
 app.use(expressLayouts);
@@ -27,9 +29,10 @@ require('dotenv').config();
 
 // set up session with some initial config
 
-// initialize passport
+// PASSPORT
+// initialize passport-new
 app.use(passport.initialize());
-// tell app to use passport to set up session
+// tell app to use passport to set up session-new
 app.use(passport.session());
 
 passport.use(new LocalStrategy({

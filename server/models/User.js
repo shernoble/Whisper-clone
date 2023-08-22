@@ -13,6 +13,8 @@ const userSchema=new mongoose.Schema({
     //     required:'This field is required'
     // }
 });
+// PASSPORT
+// hash n salt our passwords and save users into mongodb
 userSchema.plugin(passportLocalMongoose,{usernameField:'email'});
 
 // model name =users of schema categorySchema

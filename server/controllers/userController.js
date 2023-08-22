@@ -5,6 +5,9 @@ const passport=require("passport");
 // const connectEnsureLogin = require('connect-ensure-login');
 // passport-local will be used by passport-local-mongoose but we dont need to explicitly require it
 
+passport.use(User.createStrategy());
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 exports.homepage=async(req,res)=>{
     try{
@@ -23,18 +26,25 @@ exports.login=async(req,res)=>{
     }
 }
 exports.loginPost=async(req,res)=>{
-    const user_login=new User({
+    
+    const user=new User({
         email:req.body.email,
         password:req.body.password
     });
-    req.login(user_login,function(err){
-        if(err) console.log(err);
+
+    req.login(user,function(err){
+        if(err){
+            console.log("error:"+err);
+            res.render("login");
+        }
         else{
+            // authenticate
             passport.authenticate("local")(req,res,function(){
                 res.redirect("/secrets");
-            }); 
+            });
         }
-    });
+    })
+
 }
 exports.register=async(req,res)=>{
     try{
@@ -45,36 +55,36 @@ exports.register=async(req,res)=>{
         res.status(500).send({message:err.message || "Error Occured"});
     }
 }
-exports.registerPost=async(req,res)=>{
-    console.log(req.body.password);
-    User.register({email:req.body.email},req.body.password,function(err,user){
-        if(err){
-            console.log(err);
-            res.redirect("/register");
-        }
-        else{
-            // authenticate "local"ly
-            // callback is triggered onlywhen auth is successful, cookies are created, sessions are cerated
-            passport.authenticate("local")(req,res,function(){
-                console.log(req.isAuthenticated());
-                res.redirect("/secrets");
-            }); 
-        }
-    });
-    
-}
-exports.checkAuth=async(req,res)=>{
-    // connectEnsureLogin.ensureLoggedIn();
-    // console.log(req.isAuthenticated());
+
+exports.secrets=async(req,res)=>{
     if(req.isAuthenticated()){
-        console.log("auth");
         res.render("secrets");
     }
     else{
-        console.log("no auth");
         res.redirect("/login");
     }
 }
+
+exports.registerPost=async(req,res)=>{
+    
+    console.log(req.body.email);
+    User.register({email:req.body.email},req.body.password,function(err,user){
+        if(err){
+            console.log("error"+err);
+            res.redirect("/register");
+        }
+        else{
+            // type of auth performed->"local"
+            
+            passport.authenticate("local")(req,res,function(){
+                // callback triggered only if authentication was successful
+                res.redirect("/secrets");
+            })
+        }
+    })
+
+}
+
 exports.logoutUser=async(req,res)=>{
     req.logout(function(err) {
         if (err) { return next(err); }
